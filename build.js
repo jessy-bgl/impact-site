@@ -27,7 +27,7 @@ const helmetMatch = src.match(/<helmet>([\s\S]*?)<\/helmet>/);
 if (!helmetMatch) throw new Error("Could not find <helmet> block");
 let helmetContent = helmetMatch[1];
 // drop the internal bundler thumbnail template, not needed on the public site
-helmetContent = helmetContent.replace(/<template id="__bundler_thumbnail">[\s\S]*?<\/template>\s*/, "");
+helmetContent = helmetContent.replace(/<template id="__bundler_thumbnail"[\s\S]*?<\/template>\s*/, "");
 
 // --- extract body content: everything between </helmet> and </x-dc> ---
 const bodyStart = src.indexOf("</helmet>") + "</helmet>".length;
@@ -37,11 +37,11 @@ let bodyContent = src.slice(bodyStart, bodyEnd);
 
 // --- extract data-dc-script props defaults + logic class ---
 const scriptMatch = src.match(
-  /<script type="text\/x-dc" data-dc-script data-props="([^"]*)">([\s\S]*?)<\/script>/
+  /<script\s+type="text\/x-dc"\s+data-dc-script\s+data-props=(?:"([^"]*)"|'([^']*)')\s*>([\s\S]*?)<\/script>/
 );
 if (!scriptMatch) throw new Error("Could not find data-dc-script block");
-const propsSchema = JSON.parse(unescapeHtml(scriptMatch[1]));
-const scriptBody = scriptMatch[2];
+const propsSchema = JSON.parse(unescapeHtml(scriptMatch[1] ?? scriptMatch[2]));
+const scriptBody = scriptMatch[3];
 
 const propsDefaults = {};
 for (const [key, def] of Object.entries(propsSchema)) {
@@ -73,7 +73,7 @@ bodyContent = bodyContent.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, key) => {
 let hoverCounter = 0;
 const hoverRules = [];
 bodyContent = bodyContent.replace(
-  /style="([^"]*)" style-hover="([^"]*)"/g,
+  /style="([^"]*)"\s+style-hover="([^"]*)"/g,
   (_, baseStyle, hoverStyle) => {
     hoverCounter += 1;
     const cls = `hov-${hoverCounter}`;
